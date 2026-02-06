@@ -1,0 +1,257 @@
+{
+  "name": "My Competitive Intelligence Automation copy",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f36c8213-0338-4c6f-9943-fc17b0a435ac",
+              "name": "=competitor",
+              "value": "=[\n  \"www.datadoghq.com\",\n  \"www.solarwinds.com\"\n]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        -128
+      ],
+      "id": "041bb238-57d6-4270-b041-68265c00e985",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a competitive intelligence analyst.\n\nYou do NOT have access to real-time data.\nUse your existing general knowledge and reasoning.\n\nCompetitors:\n{{ $json.competitor.join(\", \") }}\n\nTasks:\n1. Summarize each competitor’s core offerings and positioning\n2. Identify historically known product directions and trends\n3. Infer likely recent strategic moves based on industry patterns\n4. Clearly label assumptions vs known facts\n5. Highlight areas that SHOULD be re-validated in future runs\n\nImportant rules:\n- Do NOT claim real-time awareness\n- Do NOT say “I cannot do this”\n- Use phrases like:\n  “Based on known information…”\n  “Historically…”\n  “Likely direction…”\n  “Requires validation in future runs…”\n\nOutput in MARKDOWN with:\n- Executive summary\n- Per-competitor analysis\n- Trend comparison\n- Assumption & validation checklist\n",
+        "options": {
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        80,
+        64
+      ],
+      "id": "f1af0f0b-a36a-4649-a2a3-ae05595fec37",
+      "name": "Research Agent",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        272
+      ],
+      "id": "d15c13a9-b029-4f82-8c8c-a589c850ece4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Zl0aMoOQQF3WU2qB",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Model', ``, 'string') }}",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGeminiTool",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        272
+      ],
+      "id": "843f5258-e21a-4a3d-a844-9ff750b65338",
+      "name": "Message a model in Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Zl0aMoOQQF3WU2qB",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{$json.output}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        416,
+        64
+      ],
+      "id": "2eb30545-da9f-4023-954f-0de884f957b6",
+      "name": "Render Markdown to HTML",
+      "retryOnFail": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{$json.data}}\n",
+        "name": "competitive-intelligence-report.html",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        64
+      ],
+      "id": "5535847c-f34a-43dd-9b58-2301b2e88992",
+      "name": "Create file from text",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "tuDxfcZFdqW1Q9cT",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 15,
+              "triggerAtHour": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        -128
+      ],
+      "id": "1c19c3f8-bfc2-4ce6-b043-c2025db09d3e",
+      "name": "Schedule Trigger1",
+      "retryOnFail": true,
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Google Gemini": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Render Markdown to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Markdown to HTML": {
+      "main": [
+        [
+          {
+            "node": "Create file from text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file from text": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "f61397e1-0ee7-41b5-b5a1-09c5becfaaab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9724093fff6f2c945b4df39c39dd20924f1d83654f1ae2365bd0d609d037cf3a"
+  },
+  "id": "Gh6es4sBoMugrDDU",
+  "tags": []
+}
